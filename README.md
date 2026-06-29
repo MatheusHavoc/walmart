@@ -1,10 +1,17 @@
 # Walmart Sales Analysis
 
-Professional Python project for Walmart sales analysis. The original notebook is preserved, and reusable project code now lives in `src/walmart_analytics/`.
+This repository contains the original Walmart sales notebook and a new lightweight Python profiling layer under `src/walmart_analytics/`.
 
-## Staff Data Engineer assessment
+## What this PR changes
 
-This is a solid business analytics repository for a junior data role because it uses retail data and operational metrics. The main gap was that the project was notebook-only and lacked a reproducible Python structure.
+The notebook remains the source of the full exploratory analysis. The Python code added here does not recreate every chart or business question. It provides:
+
+- local CSV/Excel ingestion with explicit errors;
+- normalized column names;
+- missing-value and numeric profiling outputs;
+- duplicate-row metrics;
+- an optional `sales_summary.csv` when `weekly_sales` is present;
+- tests for ingestion and profiling behavior.
 
 ## Structure
 
@@ -20,7 +27,11 @@ This is a solid business analytics repository for a junior data role because it 
 └── README.md
 ```
 
-## How to run
+## Dataset requirement
+
+The expected local input is `data/raw/Walmart.csv`. That file is not committed. Without it, the project pipeline cannot be executed end to end.
+
+## How to run when the dataset is available
 
 ```bash
 python -m venv .venv
@@ -30,17 +41,20 @@ python -m pytest
 python -m walmart_analytics.pipeline --input data/raw/Walmart.csv --output data/processed
 ```
 
-## What the pipeline provides
+## Outputs
 
-- CSV/Excel ingestion with error handling.
-- Column normalization.
-- Missing-value summary.
-- Numeric profiling.
-- Duplicate-row metrics.
-- Generated artifacts in `data/processed/`.
+Always generated when the input file exists:
+
+- `data/processed/missing_summary.csv`
+- `data/processed/numeric_summary.csv`
+- `data/processed/dataset_metrics.json`
+
+Generated only when expected sales columns exist:
+
+- `data/processed/sales_summary.csv`
 
 ## Current limitations
 
-- The raw dataset is not committed.
-- Business-specific aggregations from the notebook should be moved into tested Python functions.
-- A SQL layer for store/week level metrics would make the project stronger for Analytics Engineering roles.
+- Business-specific aggregations from the notebook are not fully extracted yet.
+- No SQL layer or dashboard is added in this PR.
+- The README avoids claiming reproducibility beyond the dataset-dependent profiling command.
