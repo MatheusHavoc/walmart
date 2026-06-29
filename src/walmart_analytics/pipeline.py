@@ -55,14 +55,34 @@ def missing_summary(df: pd.DataFrame) -> pd.DataFrame:
     return summary.sort_values(["missing_count", "column"], ascending=[False, True]).reset_index(drop=True)
 
 
+def sales_summary(df: pd.DataFrame) -> pd.DataFrame:
+    """Return Walmart sales summaries when expected sales columns are available."""
+    if "weekly_sales" not in df.columns:
+        LOGGER.info("Skipping sales summary; missing optional column: weekly_sales")
+        return pd.DataFrame()
+    if "store" in df.columns:
+        return (
+            df.groupby("store", dropna=False)
+            .agg(records=("weekly_sales", "size"), avg_weekly_sales=("weekly_sales", "mean"), total_weekly_sales=("weekly_sales", "sum"))
+            .reset_index()
+            .sort_values("total_weekly_sales", ascending=False)
+        )
+    return pd.DataFrame(
+        {"metric": ["records", "avg_weekly_sales", "total_weekly_sales"], "value": [int(len(df)), float(df["weekly_sales"].mean()), float(df["weekly_sales"].sum())]}
+    )
+
+
 def run_pipeline(input_path: str | Path, output_dir: str | Path = "data/processed") -> dict[str, Any]:
-    """Run the data-quality pipeline and write artifacts to disk."""
+    """Run local profiling and optional Walmart sales summaries for an available dataset."""
     output_path = Path(output_dir)
     output_path.mkdir(parents=True, exist_ok=True)
     df = load_dataset(input_path)
     metrics = profile_dataset(df)
     missing_summary(df).to_csv(output_path / "missing_summary.csv", index=False)
     df.select_dtypes(include="number").describe().transpose().to_csv(output_path / "numeric_summary.csv")
+    sales = sales_summary(df)
+    if not sales.empty:
+        sales.to_csv(output_path / "sales_summary.csv", index=False)
     (output_path / "dataset_metrics.json").write_text(json.dumps(metrics, indent=2), encoding="utf-8")
     LOGGER.info("Pipeline completed for %s", PROJECT_NAME)
     return {"rows": metrics["row_count"], "outputs": str(output_path)}
