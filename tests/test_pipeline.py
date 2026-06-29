@@ -10,7 +10,9 @@ from walmart_analytics.pipeline import load_dataset, missing_summary, run_pipeli
 
 def test_load_dataset_normalizes_columns(tmp_path):
     dataset = tmp_path / "sample.csv"
-    pd.DataFrame({"Weekly Sales": [1.0, None], "Store Type": ["A", "B"]}).to_csv(dataset, index=False)
+    pd.DataFrame({"Weekly Sales": [1.0, None], "Store Type": ["A", "B"]}).to_csv(
+        dataset, index=False
+    )
     df = load_dataset(dataset)
     assert list(df.columns) == ["weekly_sales", "store_type"]
 
